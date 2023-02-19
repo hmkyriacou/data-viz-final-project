@@ -179,14 +179,14 @@ export const viz = (container,
             xValue: (d) => d.winPct,
             xLabel: "Home Field Win Percentage",
             yValue: (d) => d.temp,
-            yLabel: "City Average Temperature",
+            yLabel: "City Average Temperature (°F)",
             zValue: (d) => d.img,
             title: "Does the average weather at home affect home team Win Percentage?",
             margin: {
-                left: 100,
+                left: 75,
                 right: 50,
-                bottom: 100,
-                top: 150
+                bottom: 75,
+                top: 100
             }
         })
 
