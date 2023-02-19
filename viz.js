@@ -93,13 +93,13 @@ export const viz = (container,
             data: 'LOADING',
         }));
 
-        fetch('data.json')
+        fetch('https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/data.json')
             .then((res) => res.json())
             .then((rawdata) => {
 
                 let teamsObj = {}
 
-                for (const year of [2022, 2021, 2020, 2019, 2018]) {
+                for (const year of [2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015]) {
                     for (const week in rawdata[year]) {
                         for (const game in rawdata[year][week]) {
                             rawdata[year][week][game]["away_score"] = +rawdata[year][week][game]["away_score"]
