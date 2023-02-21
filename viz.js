@@ -1,43 +1,9 @@
 import { select, arc } from 'd3';
 import { scatterPlot } from './scatterPlot'
 
-
-const data = [0, 1, 2, 3, 4];
-const height = window.innerHeight;
+const legend_height = 150
+const height = window.innerHeight - legend_height;
 const width = window.innerWidth;
-
-const weather_data = {
-    "Pittsburgh": 51.8,
-    "Las Vegas": 68.5,
-    "Kansas City": 54.5,
-    "Dallas": 66.2,
-    "Carolina": 60.9,
-    "New Orleans": 69.2,
-    "Denver": 50.7,
-    "Washington": 58.2,
-    "Cleveland": 53,
-    "Detroit": 50,
-    "New England": 51.7,
-    "Miami": 76.9,
-    "Buffalo": 47,
-    "Green Bay": 48.1,
-    "San Francisco": 58.2,
-    "Philadelphia": 55.8,
-    "Indianapolis": 53.2,
-    "Seattle": 52.4,
-    "Baltimore": 55.6,
-    "Atlanta": 66.2,
-    "New York": 55.3,
-    "Tennessee": 59.8,
-    "Houston": 69.4,
-    "Cincinnati": 53,
-    "Tampa Bay": 73.2,
-    "Los Angeles": 65.4,
-    "Chicago": 49.7,
-    "Arizona": 75,
-    "Jacksonville": 68.5,
-    "Minnesota": 46.1
-}
 
 const image_data = {
     "Pittsburgh": "https://www.clipartmax.com/png/middle/437-4378474_pittsburgh-steelers-logo-png-transparent-svg-vector-logo-pittsburgh-steelers-football.png",
@@ -74,20 +40,65 @@ const image_data = {
     "Minnesota": "https://1000logos.net/wp-content/uploads/2017/06/Minnesota-Vikings-Logo-1965.png"
 }
 
+function radio(selection, { name, l, handleChange }) {
+
+    selection
+        .selectAll(`input.${l}`)
+        .data([l])
+        .join('input')
+        .attr('class', l)
+        .attr('type', 'radio')
+        .attr('name', name)
+        .attr('id', (d) => d)
+        .attr('value', (d) => d)
+        .on("change", handleChange)
+
+    selection
+        .selectAll(`label.${l}`)
+        .data([l])
+        .join('label')
+        .attr('class', l)
+        .attr('for', (d) => d)
+        .text((d) => d)
+
+}
+
 export const viz = (container,
     { state, setState }) => {
 
+
+    const legend = select(container)
+        .selectAll('div.legend')
+        .data([null])
+        .join('div')
+        .attr('class', 'legend');
+
+    const handleChange = (e) => {
+
+        setState((state) => ({
+            ...state,
+            weather_type: e.target.value
+        }))
+    }
+
+    ['Temperature', 'Rainfall', 'Snowfall'].map((d) => {
+        legend
+            .call(radio, { name: "weather_type", l: d, handleChange })
+    })
+
+
     const svg = select(container)
-        .selectAll('svg')
+        .selectAll('svg.chart')
         .data([null])
         .join('svg')
+        .attr('class', 'chart')
         .attr('width', width)
         .attr('height', height)
         .attr("style", "border:1px solid black; box-sizing: border-box;")
 
-    const { data } = state
+    const { data, weather_data } = state
 
-    if (data === undefined) {
+    if ((weather_data !== undefined && weather_data !== 'LOADING') && data === undefined) {
         setState((state) => ({
             ...state,
             data: 'LOADING',
@@ -104,8 +115,8 @@ export const viz = (container,
                         for (const game in rawdata[year][week]) {
                             rawdata[year][week][game]["away_score"] = +rawdata[year][week][game]["away_score"]
                             rawdata[year][week][game]["home_score"] = +rawdata[year][week][game]["home_score"]
-                            
-                            
+
+
 
                             let team = game.split('_')[1]
 
@@ -124,7 +135,7 @@ export const viz = (container,
                             if (team === "San Diego Chargers") {
                                 team = "Los Angeles Chargers"
                             }
-                            
+
                             const city = team.substring(0, team.lastIndexOf(" "))
 
                             if (teamsObj[team]) {
@@ -159,18 +170,46 @@ export const viz = (container,
 
 
                 for (let team in teamsObj) {
-                    teamsObj[team].temp = weather_data[teamsObj[team].city]
+                    //console.log(weather_data[teamsObj[team].city], teamsObj[team].city)
+                    teamsObj[team].temp = weather_data[teamsObj[team].city].map((m) => {
+                        return m['MLY-AVG-TEMP']
+                    }).reduce((p, c) => p + c, 0) / 12
+                    //console.log(teamsObj[team].temp)
                     teamsObj[team].img = image_data[teamsObj[team].city] || image_data[team]
+
+                    teamsObj[team].rainfall = weather_data[teamsObj[team].city].map((m) => {
+                        return m['MLY-PRCP-NORMAL']
+                    }).reduce((p, c) => p + c, 0) / 12
+
+                    teamsObj[team].snowfall = weather_data[teamsObj[team].city].map((m) => {
+                        return m['MLY-SNOW-NORMAL']
+                    }).reduce((p, c) => p + c, 0) / 12
                 }
 
-                console.log(teamsObj)
+                //console.log(teamsObj)
 
                 setState((state) => ({
                     ...state,
                     data: Object.values(teamsObj)
                 }))
             })
+
+
     } else if (data && data !== "LOADING") {
+
+        let yValue = (d) => d.temp
+        let yLabel = "City Average Monthly Temperature (°F)"
+
+        if (state.weather_type === "Temperature") {
+            yValue = (d) => d.temp
+            yLabel = "City Average Monthly Temperature (°F)"
+        } else if (state.weather_type === "Rainfall") {
+            yValue = (d) => d.rainfall
+            yLabel = "City Average Monthly Rainfall (in)"
+        } else if (state.weather_type === "Snowfall") {
+            yValue = (d) => d.snowfall
+            yLabel = "City Average Monthly Snowfall (in)"
+        }
 
         svg.call(scatterPlot, {
             data,
@@ -178,8 +217,8 @@ export const viz = (container,
             height,
             xValue: (d) => d.winPct,
             xLabel: "Home Field Win Percentage",
-            yValue: (d) => d.temp,
-            yLabel: "City Average Temperature (°F)",
+            yValue,
+            yLabel,
             zValue: (d) => d.img,
             title: "Does the average weather at home affect home team Win Percentage?",
             margin: {
@@ -190,9 +229,24 @@ export const viz = (container,
             }
         })
 
-        console.log(data)
+        //console.log(data)
 
+    } else if (weather_data === undefined) {
+        setState((state) => ({
+            ...state,
+            weather_data: 'LOADING'
+        }))
+
+        fetch('https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/weather_data.json')
+            .then((res) => res.json())
+            .then((rawdata) => {
+
+                setState((state) => ({
+                    ...state,
+                    weather_data: rawdata
+                }))
+            })
     }
 
 
-    };
+};
