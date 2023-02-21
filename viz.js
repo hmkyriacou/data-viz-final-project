@@ -1,9 +1,7 @@
 import { select, arc } from 'd3';
 import { scatterPlot } from './scatterPlot'
 
-const legend_height = 150
-const height = window.innerHeight - legend_height;
-const width = window.innerWidth;
+
 
 const image_data = {
     "Pittsburgh": "https://www.clipartmax.com/png/middle/437-4378474_pittsburgh-steelers-logo-png-transparent-svg-vector-logo-pittsburgh-steelers-football.png",
@@ -43,6 +41,13 @@ const image_data = {
 function radio(selection, { name, l, handleChange }) {
 
     selection
+        .selectAll(`h3.${name}`)
+        .data([null])
+        .join('h3')
+        .attr('class', name)
+        .text(name)
+
+    selection
         .selectAll(`input.${l}`)
         .data([l])
         .join('input')
@@ -60,6 +65,10 @@ function radio(selection, { name, l, handleChange }) {
         .attr('class', l)
         .attr('for', (d) => d)
         .text((d) => d)
+        .selectAll(`br.${l}`)
+        .data([null])
+        .join('br')
+        .attr('class', l)
 
 }
 
@@ -84,7 +93,29 @@ export const viz = (container,
     ['Temperature', 'Rainfall', 'Snowfall'].map((d) => {
         legend
             .call(radio, { name: "weather_type", l: d, handleChange })
-    })
+    });
+
+    const legend2 = select(container)
+        .selectAll('div.legend2')
+        .data([null])
+        .join('div')
+        .attr('class', 'legend2');
+
+    const handleWinPctTypeChange = (e) => {
+        setState((state) => ({
+            ...state,
+            win_pct_type: e.target.value
+        }))
+    }
+
+    ['Home_Field_Win_Percentage', 'Percent_of_Wins_at_Home'].map((d) => {
+        legend2
+            .call(radio, { name: "win_pct_type", l: d, handleChange: handleWinPctTypeChange })
+    });
+
+    const legend_height = legend.node().offsetHeight + legend2.node().offsetHeight + 50
+    const height = window.innerHeight - legend_height;
+    const width = window.innerWidth;
 
 
     const svg = select(container)
@@ -95,6 +126,26 @@ export const viz = (container,
         .attr('width', width)
         .attr('height', height)
         .attr("style", "border:1px solid black; box-sizing: border-box;")
+
+    const transform_city = (t) => {
+        if (t === "Washington Redskins" || t === "Washington Football Team") {
+            t = "Washington Commanders"
+        }
+
+        if (t === "Oakland Raiders") {
+            t = "Las Vegas Raiders"
+        }
+
+        if (t === "St. Louis Rams") {
+            t = "Los Angeles Rams"
+        }
+
+        if (t === "San Diego Chargers") {
+            t = "Los Angeles Chargers"
+        }
+
+        return t
+    }
 
     const { data, weather_data } = state
 
@@ -118,53 +169,61 @@ export const viz = (container,
 
 
 
-                            let team = game.split('_')[1]
+                            let home_team = transform_city(game.split('_')[1])
+                            let away_team = transform_city(game.split('_')[0])
 
-                            if (team === "Washington Redskins" || team === "Washington Football Team") {
-                                team = "Washington Commanders"
+                            if (teamsObj[away_team] === undefined) {
+                                teamsObj[away_team] = {
+                                    away_wins: 0,
+                                    home_wins: 0,
+                                    tot_games: 0,
+                                    home_games: 0,
+                                    away_games: 0
+                                }
                             }
 
-                            if (team === "Oakland Raiders") {
-                                team = "Las Vegas Raiders"
+                            if (teamsObj[home_team] === undefined) {
+                                teamsObj[home_team] = {
+                                    away_wins: 0,
+                                    home_wins: 0,
+                                    tot_games: 0,
+                                    home_games: 0,
+                                    away_games: 0
+                                }
                             }
 
-                            if (team === "St. Louis Rams") {
-                                team = "Los Angeles Rams"
-                            }
-
-                            if (team === "San Diego Chargers") {
-                                team = "Los Angeles Chargers"
-                            }
-
-                            const city = team.substring(0, team.lastIndexOf(" "))
-
-                            if (teamsObj[team]) {
-                                teamsObj[team].push(rawdata[year][week][game])
+                            if (rawdata[year][week][game]["away_score"] > rawdata[year][week][game]["home_score"]) {
+                                teamsObj[away_team].away_wins++
                             } else {
-                                teamsObj[team] = [rawdata[year][week][game]]
+                                teamsObj[home_team].home_wins++
+                            }
+                            teamsObj[away_team].tot_games++
+                            teamsObj[home_team].tot_games++
+                            teamsObj[away_team].away_games++
+                            teamsObj[home_team].home_games++
+
+                            if (teamsObj[away_team].city === undefined) {
+                                teamsObj[away_team].city = away_team.substring(0, away_team.lastIndexOf(" "))
                             }
 
-                            teamsObj[team].city = city
+                            if (teamsObj[home_team].city === undefined) {
+                                teamsObj[home_team].city = home_team.substring(0, home_team.lastIndexOf(" "))
+                            }
 
                         }
                     }
 
                 }
 
+                console.log(teamsObj)
+
                 for (let team in teamsObj) {
 
+                    // Home Field Win Percentage
+                    teamsObj[team].winPct = teamsObj[team].home_wins / teamsObj[team].home_games
 
-                    let winPct = teamsObj[team].map((o) => {
-                        if (o.home_score > o.away_score) {
-                            return 1
-                        } else {
-                            return 0
-                        }
-                    })
-
-                    winPct = winPct.reduce((p, c) => p + c, 0) / winPct.length
-
-                    teamsObj[team].winPct = winPct
+                    // Percent of wins at home
+                    teamsObj[team].pctWinsAtHome = teamsObj[team].home_wins / (teamsObj[team].home_wins + teamsObj[team].away_wins)
 
                 }
 
@@ -211,12 +270,23 @@ export const viz = (container,
             yLabel = "City Average Monthly Snowfall (in)"
         }
 
+        let xValue = (d) => d.winPct
+        let xLabel = "Home Field Win Percentage"
+
+        if (state.win_pct_type === 'Home_Field_Win_Percentage') {
+            xValue = (d) => d.winPct
+            xLabel = "Home Field Win Percentage"
+        } else if (state.win_pct_type === 'Percent_of_Wins_at_Home') {
+            xValue = (d) => d.pctWinsAtHome
+            xLabel = "Percent of Team wins at home"
+        }
+
         svg.call(scatterPlot, {
             data,
             width,
             height,
-            xValue: (d) => d.winPct,
-            xLabel: "Home Field Win Percentage",
+            xValue,
+            xLabel,
             yValue,
             yLabel,
             zValue: (d) => d.img,
