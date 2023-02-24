@@ -1,6 +1,8 @@
 import { select, arc } from 'd3';
 import { scatterPlot } from './scatterPlot'
 
+import { lineChart } from './lineChart'
+
 
 
 const image_data = {
@@ -75,12 +77,18 @@ function radio(selection, { name, l, handleChange }) {
 export const viz = (container,
     { state, setState }) => {
 
+    const legend_holder = select(container)
+        .selectAll('div.legend_holder')
+        .data([null])
+        .join('div')
+        .attr('class', 'legend_holder')
 
-    const legend = select(container)
+    const legend = legend_holder
         .selectAll('div.legend')
         .data([null])
         .join('div')
         .attr('class', 'legend');
+
 
     const handleChange = (e) => {
 
@@ -95,7 +103,7 @@ export const viz = (container,
             .call(radio, { name: "weather_type", l: d, handleChange })
     });
 
-    const legend2 = select(container)
+    const legend2 = legend_holder
         .selectAll('div.legend2')
         .data([null])
         .join('div')
@@ -113,7 +121,25 @@ export const viz = (container,
             .call(radio, { name: "win_pct_type", l: d, handleChange: handleWinPctTypeChange })
     });
 
-    const legend_height = legend.node().offsetHeight + legend2.node().offsetHeight + 50
+    const LineSelect = legend_holder
+        .selectAll('div.LineSelect')
+        .data([null])
+        .join('div')
+        .attr('class', 'LineSelect');
+
+    const handleLineSelectChange = (e) => {
+        setState((state) => ({
+            ...state,
+            line_select: e.target.value
+        }))
+    }
+
+    ['Scatter_Plot', 'Line_Chart'].map((d) => {
+        LineSelect
+            .call(radio, { name: "line_select", l: d, handleChange: handleLineSelectChange })
+    });
+
+    const legend_height = legend_holder.node().offsetHeight
     const height = window.innerHeight - legend_height;
     const width = window.innerWidth;
 
@@ -280,24 +306,53 @@ export const viz = (container,
             xValue = (d) => d.pctWinsAtHome
             xLabel = "Percent of Team wins at home"
         }
-
-        svg.call(scatterPlot, {
-            data,
-            width,
-            height,
-            xValue,
-            xLabel,
-            yValue,
-            yLabel,
-            zValue: (d) => d.img,
-            title: "Does the average weather at home affect home team Win Percentage?",
-            margin: {
-                left: 75,
-                right: 50,
-                bottom: 75,
-                top: 100
-            }
-        })
+        if (state.line_select === undefined || state.line_select === "Scatter_Plot") {
+            svg.selectAll('*').remove()
+            svg.call(scatterPlot, {
+                data,
+                width,
+                height,
+                xValue,
+                xLabel,
+                yValue,
+                yLabel,
+                zValue: (d) => d.img,
+                title: "Does the average weather at home affect home team Win Percentage?",
+                margin: {
+                    left: 75,
+                    right: 50,
+                    bottom: 75,
+                    top: 100
+                }
+            })
+        } else if (state.line_select === "Line_Chart") {
+            svg.selectAll('*').remove()
+            svg.call(lineChart, {
+                data: data.sort(function (a, b) {
+                    if (xValue(a) < xValue(b)) {
+                        return -1
+                    }
+                    if (xValue(a) > xValue(b)) {
+                        return 1
+                    }
+                    return 0
+                }),
+                width,
+                height,
+                xValue,
+                xLabel,
+                yValue,
+                yLabel,
+                zValue: (d) => d.img,
+                title: "Does the average weather at home affect home team Win Percentage?",
+                margin: {
+                    left: 75,
+                    right: 50,
+                    bottom: 75,
+                    top: 100
+                }
+            })
+        }
 
         //console.log(data)
 
