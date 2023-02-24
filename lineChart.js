@@ -38,13 +38,5 @@ export const lineChart = (
         .attr('class', 'line')
         .attr('stroke', 'black')
         .attr('fill', 'none')
-        .attr('d', lineGenerator(data.sort(function (a, b) {
-            if (xValue(a) < xValue(b)) {
-                return -1
-            }
-            if (xValue(a) > xValue(b)) {
-                return 1
-            }
-            return 0
-        })))
+        .attr('d', lineGenerator(data))
 };

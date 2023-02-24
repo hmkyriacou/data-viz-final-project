@@ -19,7 +19,7 @@ export const scatterPlot = (
         .selectAll('image')
         .data(data)
         .join('image')
-        .transition()
+        //.transition()
         .attr('x', (d) => (xScale(xValue(d))) - 25)
         .attr('y', (d) => (yScale(yValue(d))) - 25)
         .attr('width', 50)

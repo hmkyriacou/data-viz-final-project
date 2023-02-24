@@ -77,12 +77,18 @@ function radio(selection, { name, l, handleChange }) {
 export const viz = (container,
     { state, setState }) => {
 
+    const legend_holder = select(container)
+        .selectAll('div.legend_holder')
+        .data([null])
+        .join('div')
+        .attr('class', 'legend_holder')
 
-    const legend = select(container)
+    const legend = legend_holder
         .selectAll('div.legend')
         .data([null])
         .join('div')
         .attr('class', 'legend');
+
 
     const handleChange = (e) => {
 
@@ -97,7 +103,7 @@ export const viz = (container,
             .call(radio, { name: "weather_type", l: d, handleChange })
     });
 
-    const legend2 = select(container)
+    const legend2 = legend_holder
         .selectAll('div.legend2')
         .data([null])
         .join('div')
@@ -115,7 +121,7 @@ export const viz = (container,
             .call(radio, { name: "win_pct_type", l: d, handleChange: handleWinPctTypeChange })
     });
 
-    const LineSelect = select(container)
+    const LineSelect = legend_holder
         .selectAll('div.LineSelect')
         .data([null])
         .join('div')
@@ -133,7 +139,7 @@ export const viz = (container,
             .call(radio, { name: "line_select", l: d, handleChange: handleLineSelectChange })
     });
 
-    const legend_height = legend.node().offsetHeight + legend2.node().offsetHeight + LineSelect.node().offsetHeight + 50
+    const legend_height = legend_holder.node().offsetHeight
     const height = window.innerHeight - legend_height;
     const width = window.innerWidth;
 
@@ -301,6 +307,7 @@ export const viz = (container,
             xLabel = "Percent of Team wins at home"
         }
         if (state.line_select === undefined || state.line_select === "Scatter_Plot") {
+            svg.selectAll('*').remove()
             svg.call(scatterPlot, {
                 data,
                 width,
@@ -319,8 +326,17 @@ export const viz = (container,
                 }
             })
         } else if (state.line_select === "Line_Chart") {
+            svg.selectAll('*').remove()
             svg.call(lineChart, {
-                data,
+                data: data.sort(function (a, b) {
+                    if (xValue(a) < xValue(b)) {
+                        return -1
+                    }
+                    if (xValue(a) > xValue(b)) {
+                        return 1
+                    }
+                    return 0
+                }),
                 width,
                 height,
                 xValue,
