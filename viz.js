@@ -1,6 +1,8 @@
 import { select, arc } from 'd3';
 import { scatterPlot } from './scatterPlot'
 
+import { lineChart } from './lineChart'
+
 
 
 const image_data = {
@@ -113,7 +115,25 @@ export const viz = (container,
             .call(radio, { name: "win_pct_type", l: d, handleChange: handleWinPctTypeChange })
     });
 
-    const legend_height = legend.node().offsetHeight + legend2.node().offsetHeight + 50
+    const LineSelect = select(container)
+        .selectAll('div.LineSelect')
+        .data([null])
+        .join('div')
+        .attr('class', 'LineSelect');
+
+    const handleLineSelectChange = (e) => {
+        setState((state) => ({
+            ...state,
+            line_select: e.target.value
+        }))
+    }
+
+    ['Scatter_Plot', 'Line_Chart'].map((d) => {
+        LineSelect
+            .call(radio, { name: "line_select", l: d, handleChange: handleLineSelectChange })
+    });
+
+    const legend_height = legend.node().offsetHeight + legend2.node().offsetHeight + LineSelect.node().offsetHeight + 50
     const height = window.innerHeight - legend_height;
     const width = window.innerWidth;
 
@@ -280,24 +300,43 @@ export const viz = (container,
             xValue = (d) => d.pctWinsAtHome
             xLabel = "Percent of Team wins at home"
         }
-
-        svg.call(scatterPlot, {
-            data,
-            width,
-            height,
-            xValue,
-            xLabel,
-            yValue,
-            yLabel,
-            zValue: (d) => d.img,
-            title: "Does the average weather at home affect home team Win Percentage?",
-            margin: {
-                left: 75,
-                right: 50,
-                bottom: 75,
-                top: 100
-            }
-        })
+        if (state.line_select === undefined || state.line_select === "Scatter_Plot") {
+            svg.call(scatterPlot, {
+                data,
+                width,
+                height,
+                xValue,
+                xLabel,
+                yValue,
+                yLabel,
+                zValue: (d) => d.img,
+                title: "Does the average weather at home affect home team Win Percentage?",
+                margin: {
+                    left: 75,
+                    right: 50,
+                    bottom: 75,
+                    top: 100
+                }
+            })
+        } else if (state.line_select === "Line_Chart") {
+            svg.call(lineChart, {
+                data,
+                width,
+                height,
+                xValue,
+                xLabel,
+                yValue,
+                yLabel,
+                zValue: (d) => d.img,
+                title: "Does the average weather at home affect home team Win Percentage?",
+                margin: {
+                    left: 75,
+                    right: 50,
+                    bottom: 75,
+                    top: 100
+                }
+            })
+        }
 
         //console.log(data)
 

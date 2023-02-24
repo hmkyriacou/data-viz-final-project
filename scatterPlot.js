@@ -1,4 +1,4 @@
-import { extent, scaleLinear } from 'd3';
+import { extent, scaleLinear, line } from 'd3';
 import { axes } from './axes'
 
 export const scatterPlot = (
