@@ -1,9 +1,9 @@
 body {
-  margin: 0;
+  margin: 10px;
   overflow: hidden;
 }
 
-.legend_holder {
+.selectors {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
