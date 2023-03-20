@@ -24,6 +24,18 @@ export const map = (selection, { data, team_data, width, height }) => {
         40.7127753
     ]))
 
+
+
+    selection
+        .selectAll('path.country')
+        .data(data.features)
+        .join('path')
+        .attr('d', path)
+        .attr('class', 'country')
+        .attr('fill', 'none')
+        .attr('stroke', 'black')
+        .attr('stroke-width', 0.5);
+
     selection
         .selectAll('image')
         .data(team_data)
@@ -39,15 +51,5 @@ export const map = (selection, { data, team_data, width, height }) => {
         .attr('width', 80)
         .attr('height', 80)
         .attr('xling:href', (d) => d.img)
-        .attr("style", "transform: translate(-40px, -40px);")
-
-    selection
-        .selectAll('path.country')
-        .data(data.features)
-        .join('path')
-        .attr('d', path)
-        .attr('class', 'country')
-        .attr('fill', 'none')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 0.5);
+        .attr("style", "transform: translate(-40px, -40px);");
 };
