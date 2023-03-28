@@ -2,29 +2,19 @@ import {
     geoAlbersUsa,
     geoPath
 } from 'd3';
+import { pieimg } from './pie';
 
 
-export const map = (selection, { data, team_data, width, height }) => {
+export const map = (selection, { data, team_data, width, height, xValue }) => {
 
     const projection = geoAlbersUsa().fitSize([width, height], data);
     const path = geoPath(projection);
 
-    console.log(team_data)
-
-    console.log(projection([
-        -70.749016,
-        40.2127753
-    ]))
-    console.log(projection([
-        -71.249016,
-        40.7127753
-    ]))
-    console.log(projection([
-        -71.249016,
-        40.7127753
-    ]))
-
-
+    for (const team of team_data) {
+        const [x, y] = projection([team.location.lng, team.location.lat])
+        team.x = x
+        team.y = y
+    }
 
     selection
         .selectAll('path.country')
@@ -37,19 +27,10 @@ export const map = (selection, { data, team_data, width, height }) => {
         .attr('stroke-width', 0.5);
 
     selection
-        .selectAll('image')
-        .data(team_data)
-        .join('image')
-        .attr('x', (d) => projection([
-            d.location.lng,
-            d.location.lat
-        ])[0])
-        .attr('y', (d) => projection([
-            d.location.lng,
-            d.location.lat
-        ])[1])
-        .attr('width', 80)
-        .attr('height', 80)
-        .attr('xling:href', (d) => d.img)
-        .attr("style", "transform: translate(-40px, -40px);");
+        .call(pieimg, {
+            team_data,
+            r: 20,
+            xValue
+        })
+
 };
