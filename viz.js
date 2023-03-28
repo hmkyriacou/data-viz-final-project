@@ -1,148 +1,68 @@
 import { select, arc } from 'd3';
+import * as topojson from 'topojson-client';
 import { scatterPlot } from './scatterPlot'
-
+import { map } from './map'
 import { lineChart } from './lineChart'
-
-
-
-const image_data = {
-    "Pittsburgh": "https://www.clipartmax.com/png/middle/437-4378474_pittsburgh-steelers-logo-png-transparent-svg-vector-logo-pittsburgh-steelers-football.png",
-    "Las Vegas": "https://i.pinimg.com/originals/a7/28/43/a72843045273fe5a3f308f77629bab01.png",
-    "Kansas City": "https://logos-world.net/wp-content/uploads/2020/05/Kansas-City-Chiefs-logo.png",
-    "Dallas": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Dallas_Cowboys.svg/1076px-Dallas_Cowboys.svg.png",
-    "Carolina": "https://static.www.nfl.com/t_q-best/league/api/clubs/logos/CAR",
-    "New Orleans": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/New_Orleans_Saints_logo.svg/630px-New_Orleans_Saints_logo.svg.png",
-    "Denver": "https://logos-world.net/wp-content/uploads/2020/05/Denver-Broncos-logo.png",
-    "Washington": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Washington_Commanders_logo.svg/2560px-Washington_Commanders_logo.svg.png",
-    "Cleveland": "https://1000logos.net/wp-content/uploads/2016/10/Cleveland-Browns-Logo-1986.png",
-    "Detroit": "https://logos-world.net/wp-content/uploads/2020/05/Detroit-Lions-logo.png",
-    "New England": "https://loodibee.com/wp-content/uploads/nfl-new-england-patriots-team-logo.png",
-    "Miami": "https://1000logos.net/wp-content/uploads/2021/04/Miami-Dolphins-logo.png",
-    "Buffalo": "https://loodibee.com/wp-content/uploads/nfl-buffalo-bills-team-logo.png",
-    "Green Bay": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Green_Bay_Packers_logo.svg/2560px-Green_Bay_Packers_logo.svg.png",
-    "San Francisco": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/San_Francisco_49ers_logo.svg/2560px-San_Francisco_49ers_logo.svg.png",
-    "Philadelphia": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Philadelphia_Eagles_wordmark.svg/2560px-Philadelphia_Eagles_wordmark.svg.png",
-    "Indianapolis": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Indianapolis_Colts_logo.svg/974px-Indianapolis_Colts_logo.svg.png",
-    "Seattle": "https://toppng.com/uploads/preview/19-beautiful-nfl-teams-logos-seattle-seahawks-logo-transparent-11563199254zonapfkvjz.png",
-    "Baltimore": "https://logos-world.net/wp-content/uploads/2020/05/Baltimore-Ravens-logo.png",
-    "Atlanta": "https://logos-world.net/wp-content/uploads/2020/05/Atlanta-Falcons-logo.png",
-    "New York Giants": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/New_York_Giants_logo.svg/2560px-New_York_Giants_logo.svg.png",
-    "New York Jets": "https://1000logos.net/wp-content/uploads/2017/03/New-York-Jets-Logo.png",
-    "Tennessee": "https://1000logos.net/wp-content/uploads/2018/07/Tennessee-Titans-Logo.png",
-    "Houston": "https://logos-world.net/wp-content/uploads/2020/05/Houston-Texans-logo.png",
-    "Cincinnati": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Cincinnati_Bengals_logo.svg/2560px-Cincinnati_Bengals_logo.svg.png",
-    "Tampa Bay": "https://1000logos.net/wp-content/uploads/2016/10/Tampa-Bay-Buccaneers-logo.jpg",
-    "Los Angeles Rams": "https://www.freepnglogos.com/uploads/rams-logo-png/los-angeles-rams-logo-png-2.png",
-    "Los Angeles Chargers": "https://cdn.freebiesupply.com/images/large/2x/los-angeles-chargers-logo-transparent.png",
-    "Chicago": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Chicago_Bears_logo.svg/2560px-Chicago_Bears_logo.svg.png",
-    "Arizona": "https://1000logos.net/wp-content/uploads/2016/10/Arizona-Cardinals-Logo.png",
-    "Jacksonville": "https://www.gannett-cdn.com/media/USATODAY/gameon/2013/02/05/0ap1000000136416-16_9.jpg?width=618&height=350&fit=crop&format=pjpg&auto=webp",
-    "Minnesota": "https://1000logos.net/wp-content/uploads/2017/06/Minnesota-Vikings-Logo-1965.png"
-}
-
-function radio(selection, { name, l, handleChange }) {
-
-    selection
-        .selectAll(`h3.${name}`)
-        .data([null])
-        .join('h3')
-        .attr('class', name)
-        .text(name)
-
-    selection
-        .selectAll(`input.${l}`)
-        .data([l])
-        .join('input')
-        .attr('class', l)
-        .attr('type', 'radio')
-        .attr('name', name)
-        .attr('id', (d) => d)
-        .attr('value', (d) => d)
-        .on("change", handleChange)
-
-    selection
-        .selectAll(`label.${l}`)
-        .data([l])
-        .join('label')
-        .attr('class', l)
-        .attr('for', (d) => d)
-        .text((d) => d)
-        .selectAll(`br.${l}`)
-        .data([null])
-        .join('br')
-        .attr('class', l)
-
-}
+import { legend } from './legend';
 
 export const viz = (container,
     { state, setState }) => {
 
-    const legend_holder = select(container)
-        .selectAll('div.legend_holder')
+    const selectors = select(container)
+        .selectAll("div.selectors")
         .data([null])
-        .join('div')
-        .attr('class', 'legend_holder')
+        .join("div")
+        .attr("class", 'selectors')
 
-    const legend = legend_holder
-        .selectAll('div.legend')
-        .data([null])
-        .join('div')
-        .attr('class', 'legend');
+    selectors
+        .call(legend, {
+            title: { value: "weathertype", label: "Weather Type" },
+            optionsData: [
+                { value: "temperature", label: "Temperature" },
+                { value: "rainfall", label: "Rainfall" },
+                { value: "snowfall", label: "Snowfall" },
+            ],
+            onChange: (value) => {
+                setState((state) => ({
+                    ...state,
+                    weather_type: value
+                }))
+            }
+        })
 
+    selectors
+        .call(legend, {
+            title: { value: 'winpcttype', label: 'Win Percentage Type' },
+            optionsData: [
+                { value: "Home_Field_Win_Percentage", label: "Home Field Win Percentage" },
+                { value: "Percent_of_Wins_at_Home", label: "Percent of Wins at Home" },
+            ],
+            onChange: (value) => {
+                setState((state) => ({
+                    ...state,
+                    win_pct_type: value
+                }))
+            }
+        })
 
-    const handleChange = (e) => {
+    selectors
+        .call(legend, {
+            title: { value: 'viztype', label: 'Select type of viz' },
+            optionsData: [
+                { value: "scatter", label: "Scatter" },
+                { value: "line", label: "Line" },
+                { value: "map", label: "Map" },
+            ],
+            onChange: (value) => {
+                setState((state) => ({
+                    ...state,
+                    viztype: value
+                }))
+            }
+        })
 
-        setState((state) => ({
-            ...state,
-            weather_type: e.target.value
-        }))
-    }
-
-    ['Temperature', 'Rainfall', 'Snowfall'].map((d) => {
-        legend
-            .call(radio, { name: "weather_type", l: d, handleChange })
-    });
-
-    const legend2 = legend_holder
-        .selectAll('div.legend2')
-        .data([null])
-        .join('div')
-        .attr('class', 'legend2');
-
-    const handleWinPctTypeChange = (e) => {
-        setState((state) => ({
-            ...state,
-            win_pct_type: e.target.value
-        }))
-    }
-
-    ['Home_Field_Win_Percentage', 'Percent_of_Wins_at_Home'].map((d) => {
-        legend2
-            .call(radio, { name: "win_pct_type", l: d, handleChange: handleWinPctTypeChange })
-    });
-
-    const LineSelect = legend_holder
-        .selectAll('div.LineSelect')
-        .data([null])
-        .join('div')
-        .attr('class', 'LineSelect');
-
-    const handleLineSelectChange = (e) => {
-        setState((state) => ({
-            ...state,
-            line_select: e.target.value
-        }))
-    }
-
-    ['Scatter_Plot', 'Line_Chart'].map((d) => {
-        LineSelect
-            .call(radio, { name: "line_select", l: d, handleChange: handleLineSelectChange })
-    });
-
-    const legend_height = legend_holder.node().offsetHeight
-    const height = window.innerHeight - legend_height;
-    const width = window.innerWidth;
-
+    const width = container.offsetWidth
+    const height = window.innerHeight - selectors.node().offsetHeight
 
     const svg = select(container)
         .selectAll('svg.chart')
@@ -151,7 +71,7 @@ export const viz = (container,
         .attr('class', 'chart')
         .attr('width', width)
         .attr('height', height)
-        .attr("style", "border:1px solid black; box-sizing: border-box;")
+    //.attr("style", "border:1px solid black; box-sizing: border-box;")
 
     const transform_city = (t) => {
         if (t === "Washington Redskins" || t === "Washington Football Team") {
@@ -173,9 +93,14 @@ export const viz = (container,
         return t
     }
 
-    const { data, weather_data } = state
+    const { data, weather_data, meta_data, map_data, climate_zones } = state
 
-    if ((weather_data !== undefined && weather_data !== 'LOADING') && data === undefined) {
+    if ((weather_data !== undefined && weather_data !== 'LOADING') &&
+        (meta_data !== undefined && meta_data !== 'LOADING') &&
+        (map_data !== undefined && map_data !== 'LOADING') &&
+        //(climate_zones !== undefined && climate_zones !== 'LOADING') &&
+        data === undefined) {
+
         setState((state) => ({
             ...state,
             data: 'LOADING',
@@ -241,7 +166,7 @@ export const viz = (container,
 
                 }
 
-                console.log(teamsObj)
+                //console.log(teamsObj)
 
                 for (let team in teamsObj) {
 
@@ -259,8 +184,10 @@ export const viz = (container,
                     teamsObj[team].temp = weather_data[teamsObj[team].city].map((m) => {
                         return m['MLY-AVG-TEMP']
                     }).reduce((p, c) => p + c, 0) / 12
-                    //console.log(teamsObj[team].temp)
-                    teamsObj[team].img = image_data[teamsObj[team].city] || image_data[team]
+
+                    const temp_obj = meta_data[teamsObj[team].city] || meta_data[team]
+                    teamsObj[team].img = temp_obj.img
+                    teamsObj[team].location = temp_obj.location
 
                     teamsObj[team].rainfall = weather_data[teamsObj[team].city].map((m) => {
                         return m['MLY-PRCP-NORMAL']
@@ -285,13 +212,13 @@ export const viz = (container,
         let yValue = (d) => d.temp
         let yLabel = "City Average Monthly Temperature (°F)"
 
-        if (state.weather_type === "Temperature") {
+        if (state.weather_type === "temperature") {
             yValue = (d) => d.temp
             yLabel = "City Average Monthly Temperature (°F)"
-        } else if (state.weather_type === "Rainfall") {
+        } else if (state.weather_type === "rainfall") {
             yValue = (d) => d.rainfall
             yLabel = "City Average Monthly Rainfall (in)"
-        } else if (state.weather_type === "Snowfall") {
+        } else if (state.weather_type === "snowfall") {
             yValue = (d) => d.snowfall
             yLabel = "City Average Monthly Snowfall (in)"
         }
@@ -306,7 +233,7 @@ export const viz = (container,
             xValue = (d) => d.pctWinsAtHome
             xLabel = "Percent of Team wins at home"
         }
-        if (state.line_select === undefined || state.line_select === "Scatter_Plot") {
+        if (state.viztype === undefined || state.viztype === "scatter") {
             svg.selectAll('*').remove()
             svg.call(scatterPlot, {
                 data,
@@ -325,7 +252,7 @@ export const viz = (container,
                     top: 100
                 }
             })
-        } else if (state.line_select === "Line_Chart") {
+        } else if (state.viztype === "line") {
             svg.selectAll('*').remove()
             svg.call(lineChart, {
                 data: data.sort(function (a, b) {
@@ -352,6 +279,20 @@ export const viz = (container,
                     top: 100
                 }
             })
+        } else if (state.viztype === "map") {
+            svg.selectAll('*').remove()
+            svg.call(map, {
+                width,
+                height,
+                xValue,
+                xLabel,
+                yValue,
+                yLabel,
+                zValue: (d) => d.img,
+                title: "Map of home team win percentage and climate regions",
+                data: map_data,
+                team_data: data
+            })
         }
 
         //console.log(data)
@@ -359,8 +300,50 @@ export const viz = (container,
     } else if (weather_data === undefined) {
         setState((state) => ({
             ...state,
-            weather_data: 'LOADING'
+            weather_data: 'LOADING',
+            meta_data: 'LOADING',
+            map_data: 'LOADING',
+            climate_zones: 'LOADING'
         }))
+
+        fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
+            .then((res) => res.json())
+            .then(topoJSONdata => {
+                const map_data = topojson.feature(
+                    topoJSONdata,
+                    "states"
+                )
+                //console.log(map_data)
+                setState((state) => ({
+                    ...state,
+                    map_data
+                }))
+            })
+
+        // fetch('https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/topo.json')
+        //     .then((res) => res.json())
+        //     .then(topoJSONdata => {
+        //         const climate_zones = topojson.feature(
+        //             topoJSONdata,
+        //             "geo"
+        //         )
+        //         //console.log(map_data)
+        //         setState((state) => ({
+        //             ...state,
+        //             climate_zones
+        //         }))
+        //     })
+
+
+        fetch('https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/meta-data.json')
+            .then((res) => res.json())
+            .then((rawdata) => {
+
+                setState((state) => ({
+                    ...state,
+                    meta_data: rawdata
+                }))
+            })
 
         fetch('https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/weather_data.json')
             .then((res) => res.json())
