@@ -3,8 +3,13 @@ import {
     geoPath
 } from 'd3';
 
+export const mapdestroy = (selection) => {
+    selection
+        .selectAll('path.country')
+        .remove()
+}
 
-export const map = (selection, { data, team_data, width, height }) => {
+export default function map(selection, { data, team_data, width, height }) {
 
     const projection = geoAlbersUsa().fitSize([width, height], data);
     const path = geoPath(projection);
@@ -40,6 +45,7 @@ export const map = (selection, { data, team_data, width, height }) => {
         .selectAll('image')
         .data(team_data)
         .join('image')
+        //.transition()
         .attr('x', (d) => projection([
             d.location.lng,
             d.location.lat
@@ -51,5 +57,8 @@ export const map = (selection, { data, team_data, width, height }) => {
         .attr('width', 80)
         .attr('height', 80)
         .attr('xling:href', (d) => d.img)
-        .attr("style", "transform: translate(-40px, -40px);");
+        .attr("style", "transform: translate(-40px, -40px);")
+        .raise();
+    
+    
 };

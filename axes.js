@@ -1,6 +1,16 @@
 import { axisLeft, axisBottom } from 'd3'
 
-export function axes(
+export const axisdestroy = (selection) => {
+    selection
+        .selectAll('g')
+        .remove()
+    
+    selection
+        .selectAll('text')
+        .remove()
+}
+
+export default function axes(
     selection,
     { xScale, xLabel, yScale, yLabel, title}
 ) {

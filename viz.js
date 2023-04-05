@@ -1,9 +1,11 @@
 import { select, arc } from 'd3';
 import * as topojson from 'topojson-client';
-import { scatterPlot } from './scatterPlot'
-import { map } from './map'
-import { lineChart } from './lineChart'
+import scatterPlot, {scatterdestroy} from './scatterPlot'
+import map, { mapdestroy } from './map'
+import lineChart, {linedestroy} from './lineChart'
 import { legend } from './legend';
+import { menu } from './menu';
+import {monthSelect} from './monthSelect'
 
 export const viz = (container,
     { state, setState }) => {
@@ -27,7 +29,8 @@ export const viz = (container,
                     ...state,
                     weather_type: value
                 }))
-            }
+            },
+            legendType: menu
         })
 
     selectors
@@ -42,7 +45,8 @@ export const viz = (container,
                     ...state,
                     win_pct_type: value
                 }))
-            }
+            },
+            legendType: menu
         })
 
     selectors
@@ -54,11 +58,33 @@ export const viz = (container,
                 { value: "map", label: "Map" },
             ],
             onChange: (value) => {
+                select(container).selectAll('svg').remove()
                 setState((state) => ({
                     ...state,
                     viztype: value
                 }))
-            }
+            },
+            legendType: menu
+        })
+
+    selectors
+        .call(legend, {
+            title: { value: 'monthselect', label: 'Select which months to view'},
+            optionsData: [
+                {value: "Sep", label: "September"},
+                {value: "Oct", label: "October"},
+                {value: "Nov", label: "November"},
+                {value: "Dec", label: "December"},
+                {value: "Jan", label: "January"},
+                {value: "Feb", label: "Feburary"},
+            ],
+            onChange: (months) => {
+                setState((state) => ({
+                    ...state,
+                    months
+                }))
+            },
+            legendType: monthSelect
         })
 
     const width = container.offsetWidth
@@ -93,7 +119,28 @@ export const viz = (container,
         return t
     }
 
-    const { data, weather_data, meta_data, map_data, climate_zones } = state
+    const convertMonth = (m) => {
+        if (m == "Sep") {
+            return 9
+        }
+        if (m == "Oct") {
+            return 10
+        }
+        if (m == "Nov") {
+            return 11
+        }
+        if (m == "Dec") {
+            return 12
+        }
+        if (m == "Jan") {
+            return 1
+        }
+        if (m == "Feb") {
+            return 2
+        }
+    }
+
+    const { data, weather_data, meta_data, map_data, months /*climate_zones*/ } = state
 
     if ((weather_data !== undefined && weather_data !== 'LOADING') &&
         (meta_data !== undefined && meta_data !== 'LOADING') &&
@@ -118,40 +165,62 @@ export const viz = (container,
                             rawdata[year][week][game]["away_score"] = +rawdata[year][week][game]["away_score"]
                             rawdata[year][week][game]["home_score"] = +rawdata[year][week][game]["home_score"]
 
-
+                            
 
                             let home_team = transform_city(game.split('_')[1])
                             let away_team = transform_city(game.split('_')[0])
 
+                            
+
                             if (teamsObj[away_team] === undefined) {
                                 teamsObj[away_team] = {
-                                    away_wins: 0,
-                                    home_wins: 0,
-                                    tot_games: 0,
-                                    home_games: 0,
-                                    away_games: 0
+                                    away_wins: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    home_wins: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    tot_games: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    home_games: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    away_games: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0}
                                 }
                             }
 
                             if (teamsObj[home_team] === undefined) {
                                 teamsObj[home_team] = {
-                                    away_wins: 0,
-                                    home_wins: 0,
-                                    tot_games: 0,
-                                    home_games: 0,
-                                    away_games: 0
+                                    away_wins: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    home_wins: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    tot_games: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    home_games: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0},
+                                    away_games: {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0}
                                 }
                             }
 
-                            if (rawdata[year][week][game]["away_score"] > rawdata[year][week][game]["home_score"]) {
-                                teamsObj[away_team].away_wins++
-                            } else {
-                                teamsObj[home_team].home_wins++
+                            let date;
+                            if (rawdata[year][week][game]["date"].includes("Sep")) {
+                                date = "Sep"
                             }
-                            teamsObj[away_team].tot_games++
-                            teamsObj[home_team].tot_games++
-                            teamsObj[away_team].away_games++
-                            teamsObj[home_team].home_games++
+                            if (rawdata[year][week][game]["date"].includes("Oct")) {
+                                date = "Oct"
+                            }
+                            if (rawdata[year][week][game]["date"].includes("Nov")) {
+                                date = "Nov"
+                            }
+                            if (rawdata[year][week][game]["date"].includes("Dec")) {
+                                date = "Dec"
+                            }
+                            if (rawdata[year][week][game]["date"].includes("Jan")) {
+                                date = "Jan"
+                            }
+                            if (rawdata[year][week][game]["date"].includes("Feb")) {
+                                date = "Feb"
+                            }
+
+                            if (rawdata[year][week][game]["away_score"] > rawdata[year][week][game]["home_score"]) {
+                                teamsObj[away_team].away_wins[date]++
+                            } else {
+                                teamsObj[home_team].home_wins[date]++
+                            }
+                            teamsObj[away_team].tot_games[date]++
+                            teamsObj[home_team].tot_games[date]++
+                            teamsObj[away_team].away_games[date]++
+                            teamsObj[home_team].home_games[date]++
 
                             if (teamsObj[away_team].city === undefined) {
                                 teamsObj[away_team].city = away_team.substring(0, away_team.lastIndexOf(" "))
@@ -168,34 +237,57 @@ export const viz = (container,
 
                 //console.log(teamsObj)
 
+                const months = ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb"]
+
                 for (let team in teamsObj) {
+                    
+                    
 
                     // Home Field Win Percentage
-                    teamsObj[team].winPct = teamsObj[team].home_wins / teamsObj[team].home_games
+                    teamsObj[team].winPct = {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0}
+                    months.forEach((m) => {
+                        if (teamsObj[team].home_games[m] === 0) {
+                            teamsObj[team].winPct[m] = 0
+                        } else {
+                            teamsObj[team].winPct[m] = teamsObj[team].home_wins[m] / teamsObj[team].home_games[m]
+                        }
+                    })
 
                     // Percent of wins at home
-                    teamsObj[team].pctWinsAtHome = teamsObj[team].home_wins / (teamsObj[team].home_wins + teamsObj[team].away_wins)
-
+                    teamsObj[team].pctWinsAtHome = {Sep:0,Oct:0,Nov:0,Dec:0,Jan:0,Feb:0}
+                    months.forEach((m) => {
+                        if ((teamsObj[team].home_wins[m] + teamsObj[team].away_wins[m]) === 0) {
+                            teamsObj[team].pctWinsAtHome[m] = 0
+                        } else {
+                            teamsObj[team].pctWinsAtHome[m] = teamsObj[team].home_wins[m] / (teamsObj[team].home_wins[m] + teamsObj[team].away_wins[m])
+                        }
+                    })
                 }
 
 
                 for (let team in teamsObj) {
-                    //console.log(weather_data[teamsObj[team].city], teamsObj[team].city)
-                    teamsObj[team].temp = weather_data[teamsObj[team].city].map((m) => {
+                    // console.log(weather_data[teamsObj[team].city], teamsObj[team].city)
+                    const wdata = weather_data[teamsObj[team].city].filter((d) => [9,10,11,12,1,2].includes(d.MONTH))
+                    
+                    teamsObj[team].temp = wdata.map((m) => {
+                        teamsObj[team][`temp_${m.MONTH}`] = m['MLY-AVG-TEMP']
                         return m['MLY-AVG-TEMP']
-                    }).reduce((p, c) => p + c, 0) / 12
+                    }).reduce((p, c) => p + c, 0) / 6
+
+                    teamsObj[team].rainfall = wdata.map((m) => {
+                        teamsObj[team][`rainfall_${m.MONTH}`] = m['MLY-PRCP-NORMAL']
+                        return m['MLY-PRCP-NORMAL']
+                    }).reduce((p, c) => p + c, 0) / 6
+
+                    teamsObj[team].snowfall = wdata.map((m) => {
+                        teamsObj[team][`snowfall_${m.MONTH}`] = m['MLY-SNOW-NORMAL']
+                        return m['MLY-SNOW-NORMAL']
+                    }).reduce((p, c) => p + c, 0) / 6
 
                     const temp_obj = meta_data[teamsObj[team].city] || meta_data[team]
                     teamsObj[team].img = temp_obj.img
                     teamsObj[team].location = temp_obj.location
 
-                    teamsObj[team].rainfall = weather_data[teamsObj[team].city].map((m) => {
-                        return m['MLY-PRCP-NORMAL']
-                    }).reduce((p, c) => p + c, 0) / 12
-
-                    teamsObj[team].snowfall = weather_data[teamsObj[team].city].map((m) => {
-                        return m['MLY-SNOW-NORMAL']
-                    }).reduce((p, c) => p + c, 0) / 12
                 }
 
                 //console.log(teamsObj)
@@ -208,41 +300,106 @@ export const viz = (container,
 
 
     } else if (data && data !== "LOADING") {
-
-        let yValue = (d) => d.temp
+        console.log(data)
+        let yValue = (d) => {
+            if (months && months.length !== 0) {
+                let avg = 0
+                months.forEach((m) => {
+                    avg += d[`temp_${convertMonth(m)}`]
+                })
+                return avg / months.length
+            }
+            return d.temp
+        }
         let yLabel = "City Average Monthly Temperature (°F)"
-
-        if (state.weather_type === "temperature") {
-            yValue = (d) => d.temp
-            yLabel = "City Average Monthly Temperature (°F)"
-        } else if (state.weather_type === "rainfall") {
-            yValue = (d) => d.rainfall
+        let yDomain = [30, 80]
+        
+        if (state.weather_type === "rainfall") {
+            yValue = (d) => {
+                if (months && months.length !== 0) {
+                    let avg = 0
+                    months.forEach((m) => {
+                        avg += d[`rainfall_${convertMonth(m)}`]
+                    })
+                    return avg / months.length
+                }
+                return d.rainfall
+            }
             yLabel = "City Average Monthly Rainfall (in)"
         } else if (state.weather_type === "snowfall") {
-            yValue = (d) => d.snowfall
+            yValue = (d) => {
+                if (months && months.length !== 0) {
+                    let avg = 0
+                    months.forEach((m) => {
+                        avg += d[`snowfall_${convertMonth(m)}`]
+                    })
+                    return avg / months.length
+                }
+                return d.snowfall
+            }
             yLabel = "City Average Monthly Snowfall (in)"
         }
 
-        let xValue = (d) => d.winPct
-        let xLabel = "Home Field Win Percentage"
+        let xValue = (d) => {
+                let winPct = 0
+                let totGames = 0
+                if (months && months.length !== 0) {
+                    months.forEach((m) => {
+                        winPct += d.home_wins[m]
+                        totGames += d.home_games[m]
+                    })
+                    winPct = winPct / totGames
+                } else {
+                    for (const m in d.winPct) {
+                        winPct += d.home_wins[m]
+                        totGames += d.home_games[m]
+                    }
+                    winPct = winPct / totGames
+                }
+                console.log(winPct, totGames)
 
-        if (state.win_pct_type === 'Home_Field_Win_Percentage') {
-            xValue = (d) => d.winPct
-            xLabel = "Home Field Win Percentage"
-        } else if (state.win_pct_type === 'Percent_of_Wins_at_Home') {
-            xValue = (d) => d.pctWinsAtHome
+                return winPct
+            }
+        let xLabel = "Home Field Win Percentage"
+        if (state.win_pct_type === 'Percent_of_Wins_at_Home') {
+            xValue = (d) => {
+                
+                let winPct = 0
+                let totGames = 0
+                if (months && months.length !== 0) {
+                    months.forEach((m) => {
+                        winPct += d.pctWinsAtHome[m]
+                    })
+                    winPct = winPct / months.length
+                    return winPct
+                } else {
+                    for (const m in d.winPct) {
+                        winPct += d.pctWinsAtHome[m]
+                        totGames += d.tot_games[m]
+                    }
+                    winPct = winPct / 6
+                }
+                return winPct
+            }
             xLabel = "Percent of Team wins at home"
         }
+
+        // const filteredData = data.filter((e) => {
+        //     if (e.)
+        // })
+
         if (state.viztype === undefined || state.viztype === "scatter") {
-            svg.selectAll('*').remove()
             svg.call(scatterPlot, {
-                data,
+                data: data.filter((e) => {
+                    return !isNaN(xValue(e));
+                }),
                 width,
                 height,
                 xValue,
                 xLabel,
                 yValue,
                 yLabel,
+                yDomain,
                 zValue: (d) => d.img,
                 title: "Does the average weather at home affect home team Win Percentage?",
                 margin: {
@@ -252,8 +409,8 @@ export const viz = (container,
                     top: 100
                 }
             })
+
         } else if (state.viztype === "line") {
-            svg.selectAll('*').remove()
             svg.call(lineChart, {
                 data: data.sort(function (a, b) {
                     if (xValue(a) < xValue(b)) {
@@ -279,8 +436,8 @@ export const viz = (container,
                     top: 100
                 }
             })
+
         } else if (state.viztype === "map") {
-            svg.selectAll('*').remove()
             svg.call(map, {
                 width,
                 height,

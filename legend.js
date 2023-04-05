@@ -2,7 +2,7 @@ import {menu} from './menu'
 
 export const legend = (
     selection,
-    { title, optionsData, onChange }
+    { title, optionsData, onChange, legendType }
   ) => {
 
     const container = selection
@@ -19,7 +19,7 @@ export const legend = (
         .text(title.label);
     
     container
-        .call(menu, {
+        .call(legendType, {
             optionsData,
             onChange
         })

@@ -1,10 +1,17 @@
 import { extent, scaleLinear, line } from 'd3';
-import { axes } from './axes'
+import axes, { axisdestroy } from './axes'
 
-export const lineChart = (
+export const linedestroy = (selection) => {
+    axisdestroy(selection)
+    selection
+        .selectAll('path')
+        .remove()
+}
+
+export default function lineChart(
     selection,
     { data, width, height, xValue, xLabel, yValue, yLabel, zValue, margin, title }
-) => {
+) {
     const xScale = scaleLinear()
         .domain(extent(data, xValue))
         .range([margin.left, width - margin.right]);
