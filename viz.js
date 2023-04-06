@@ -267,6 +267,7 @@ export const viz = (container,
 
                 for (let team in teamsObj) {
                     // console.log(weather_data[teamsObj[team].city], teamsObj[team].city)
+                    //console.log(teamsObj[team].city, Object.keys(weather_data))
                     const wdata = weather_data[teamsObj[team].city].filter((d) => [9,10,11,12,1,2].includes(d.MONTH))
                     
                     teamsObj[team].temp = wdata.map((m) => {
@@ -300,7 +301,7 @@ export const viz = (container,
 
 
     } else if (data && data !== "LOADING") {
-        console.log(data)
+        //console.log(data)
         let yValue = (d) => {
             if (months && months.length !== 0) {
                 let avg = 0
@@ -356,7 +357,7 @@ export const viz = (container,
                     }
                     winPct = winPct / totGames
                 }
-                console.log(winPct, totGames)
+                //console.log(winPct, totGames)
 
                 return winPct
             }
