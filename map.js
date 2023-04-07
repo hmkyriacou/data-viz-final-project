@@ -23,13 +23,10 @@ export default function map(
     .attr("stroke", "black")
     .attr("stroke-width", 0.5);
 
-  selection
+  const imgs = selection
     .selectAll("image")
     .data(team_data)
     .join("image")
-    .on("mouseover", tooltip(selection, { xValue }).mouseover)
-    .on("mousemove", tooltip(selection, { xValue }).mousemove)
-    .on("mouseleave", tooltip(selection, { xValue }).mouseleave)
     .style("opacity", 0.7)
     .attr("x", (d) => projection([d.location.lng, d.location.lat])[0])
     .attr("y", (d) => projection([d.location.lng, d.location.lat])[1])
@@ -38,5 +35,9 @@ export default function map(
     .attr("xling:href", (d) => d.img)
     .style("transform", "translate(-40px, -40px)");
 
-  selection.call(tooltip, { xValue });
+  imgs.call(tooltip, {
+    parentSelection: selection,
+    xValue,
+    descriptorText: "This team has a home win percentage of: ",
+  });
 }

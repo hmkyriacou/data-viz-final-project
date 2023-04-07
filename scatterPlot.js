@@ -21,20 +21,23 @@ export default function scatterPlot(
 
   selection.call(axes, { xScale, xLabel, yScale, yLabel, title });
 
-  selection
+  const imgs = selection
     .selectAll("image")
     .data(data)
     .join("image")
     .attr("width", 50)
     .attr("height", 50)
-    .on("mouseover", tooltip(selection, { xValue }).mouseover)
-    .on("mousemove", tooltip(selection, { xValue }).mousemove)
-    .on("mouseleave", tooltip(selection, { xValue }).mouseleave)
     .style("opacity", 0.7)
     .transition()
     .attr("x", (d) => xScale(xValue(d)) - 25)
     .attr("y", (d) => yScale(yValue(d)) - 25)
     .attr("xling:href", (d) => zValue(d));
 
-  selection.call(tooltip, { xValue });
+  selection
+    .selectAll("image")
+    .call(tooltip, {
+      parentSelection: selection,
+      xValue,
+      descriptorText: "This team has a home win percentage of: ",
+    });
 }
