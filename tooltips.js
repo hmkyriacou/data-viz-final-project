@@ -1,11 +1,15 @@
 import { select, pointer } from "d3";
 
-export default function tooltip(selection, { parentSelection, xValue, descriptorText }, eventListeners = {}) {
+export default function tooltip(
+  selection,
+  { xValue, descriptorText },
+  eventListeners = {}
+) {
   let Tooltip;
   let trect;
   let ttext;
 
-  Tooltip = parentSelection
+  Tooltip = select(selection.node().parentNode)
     .selectAll("g.Tooltip")
     .data([null])
     .join("g")
@@ -30,9 +34,7 @@ export default function tooltip(selection, { parentSelection, xValue, descriptor
 
   function mouseover(e, d) {
     Tooltip.style("opacity", 1);
-    ttext.text(
-      descriptorText + xValue(d).toFixed(2)
-    );
+    ttext.text(descriptorText + xValue(d).toFixed(2));
     trect.attr("width", ttext.node().getBBox().width + 10);
     select(this).style("stroke", "black").style("opacity", 1);
     if (eventListeners && eventListeners.mouseover) {
@@ -43,7 +45,8 @@ export default function tooltip(selection, { parentSelection, xValue, descriptor
   function mousemove(e, d) {
     Tooltip.attr(
       "transform",
-      `translate(${pointer(e, selection)[0]}, ${pointer(e, selection)[1] - 100
+      `translate(${pointer(e, selection)[0]}, ${
+        pointer(e, selection)[1] - 100
       })`
     );
     if (eventListeners && eventListeners.mousemove) {

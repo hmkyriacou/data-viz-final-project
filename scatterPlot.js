@@ -21,7 +21,7 @@ export default function scatterPlot(
 
   selection.call(axes, { xScale, xLabel, yScale, yLabel, title });
 
-  const imgs = selection
+  selection
     .selectAll("image")
     .data(data)
     .join("image")
@@ -33,11 +33,8 @@ export default function scatterPlot(
     .attr("y", (d) => yScale(yValue(d)) - 25)
     .attr("xling:href", (d) => zValue(d));
 
-  selection
-    .selectAll("image")
-    .call(tooltip, {
-      parentSelection: selection,
-      xValue,
-      descriptorText: "This team has a home win percentage of: ",
-    });
+  selection.selectAll("image").call(tooltip, {
+    xValue,
+    descriptorText: "This team has a home win percentage of: ",
+  });
 }

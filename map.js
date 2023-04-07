@@ -36,7 +36,6 @@ export default function map(
     .style("transform", "translate(-40px, -40px)");
 
   imgs.call(tooltip, {
-    parentSelection: selection,
     xValue,
     descriptorText: "This team has a home win percentage of: ",
   });
