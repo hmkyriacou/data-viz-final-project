@@ -36,7 +36,6 @@ export default function tooltip(
     Tooltip.style("opacity", 1);
     ttext.text(descriptorText + xValue(d).toFixed(2));
     trect.attr("width", ttext.node().getBBox().width + 10);
-    select(this).style("stroke", "black").style("opacity", 1);
     if (eventListeners && eventListeners.mouseover) {
       eventListeners.mouseover(e, d);
     }
@@ -45,9 +44,7 @@ export default function tooltip(
   function mousemove(e, d) {
     Tooltip.attr(
       "transform",
-      `translate(${pointer(e, selection)[0]}, ${
-        pointer(e, selection)[1] - 100
-      })`
+      `translate(${pointer(e)[0]}, ${pointer(e)[1] - 20})`
     );
     if (eventListeners && eventListeners.mousemove) {
       eventListeners.mousemove(e, d);
@@ -56,7 +53,6 @@ export default function tooltip(
 
   function mouseleave(e, d) {
     Tooltip.attr("transform", "translate(-100, -100)").style("opacity", 0);
-    select(this).style("stroke", "none").style("opacity", 0.7);
     if (eventListeners && eventListeners.mouseleave) {
       eventListeners.mouseleave(e, d);
     }

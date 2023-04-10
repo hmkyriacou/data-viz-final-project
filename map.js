@@ -8,7 +8,7 @@ export const mapdestroy = (selection) => {
 
 export default function map(
   selection,
-  { data, team_data, width, height, xValue }
+  { data, team_data, width, height, xValue, state, setState }
 ) {
   const projection = geoAlbersUsa().fitSize([width, height], data);
   const path = geoPath(projection);
@@ -27,13 +27,31 @@ export default function map(
     .selectAll("image")
     .data(team_data)
     .join("image")
-    .style("opacity", 0.7)
+    .style("opacity", (d) => (state.highlighted.includes(d.team) ? 1 : 0.5))
     .attr("x", (d) => projection([d.location.lng, d.location.lat])[0])
     .attr("y", (d) => projection([d.location.lng, d.location.lat])[1])
-    .attr("width", 80)
-    .attr("height", 80)
+    .attr("width", (d) => (state.highlighted.includes(d.team) ? 40 : 20))
+    .attr("height", (d) => (state.highlighted.includes(d.team) ? 40 : 20))
     .attr("xling:href", (d) => d.img)
-    .style("transform", "translate(-40px, -40px)");
+    .style("transform", (d) =>
+      state.highlighted.includes(d.team)
+        ? "translate(-20px, -20px)"
+        : "translate(-10px, -10px)"
+    );
+
+  imgs.on("click", (e, d) => {
+    state.highlighted.indexOf(d.team) === -1
+      ? setState((prevState) => ({
+          ...prevState,
+          highlighted: state.highlighted.concat([d.team]),
+        }))
+      : setState((prevState) => ({
+          ...prevState,
+          highlighted: state.highlighted.filter((e) => {
+            return e === d.team ? false : true;
+          }),
+        }));
+  });
 
   imgs.call(tooltip, {
     xValue,

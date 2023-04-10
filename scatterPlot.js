@@ -8,7 +8,20 @@ export const scatterdestroy = (selection) => {
 
 export default function scatterPlot(
   selection,
-  { data, width, height, xValue, xLabel, yValue, yLabel, zValue, margin, title }
+  {
+    data,
+    width,
+    height,
+    xValue,
+    xLabel,
+    yValue,
+    yLabel,
+    zValue,
+    margin,
+    title,
+    state,
+    setState,
+  }
 ) {
   const xScale = scaleLinear()
     //.domain(extent(data, xValue))
@@ -21,19 +34,42 @@ export default function scatterPlot(
 
   selection.call(axes, { xScale, xLabel, yScale, yLabel, title });
 
-  selection
+  const imgs = selection
     .selectAll("image")
     .data(data)
     .join("image")
-    .attr("width", 50)
-    .attr("height", 50)
-    .style("opacity", 0.7)
+    .attr("width", (d) => (state.highlighted.includes(d.team) ? 50 : 25))
+    .attr("height", (d) => (state.highlighted.includes(d.team) ? 50 : 25))
+    .style("opacity", (d) => (state.highlighted.includes(d.team) ? 1 : 0.5));
+  imgs
     .transition()
-    .attr("x", (d) => xScale(xValue(d)) - 25)
-    .attr("y", (d) => yScale(yValue(d)) - 25)
+    .attr(
+      "x",
+      (d) =>
+        xScale(xValue(d)) - (state.highlighted.includes(d.team) ? 25 : 12.5)
+    )
+    .attr(
+      "y",
+      (d) =>
+        yScale(yValue(d)) - (state.highlighted.includes(d.team) ? 25 : 12.5)
+    )
     .attr("xling:href", (d) => zValue(d));
 
-  selection.selectAll("image").call(tooltip, {
+  imgs.on("click", (e, d) => {
+    state.highlighted.indexOf(d.team) === -1
+      ? setState((prevState) => ({
+          ...prevState,
+          highlighted: state.highlighted.concat([d.team]),
+        }))
+      : setState((prevState) => ({
+          ...prevState,
+          highlighted: state.highlighted.filter((e) => {
+            return e === d.team ? false : true;
+          }),
+        }));
+  });
+
+  imgs.call(tooltip, {
     xValue,
     descriptorText: "This team has a home win percentage of: ",
   });
