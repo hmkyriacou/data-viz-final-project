@@ -101,7 +101,7 @@ export const viz = (container, { state, setState }) => {
     }
   };
 
-  const { data, weather_data, meta_data, map_data, months /*climate_zones*/ } =
+  const { data, weather_data, meta_data, map_data, months, climate_zones } =
     state;
 
   if (
@@ -111,7 +111,8 @@ export const viz = (container, { state, setState }) => {
     meta_data !== "LOADING" &&
     map_data !== undefined &&
     map_data !== "LOADING" &&
-    //(climate_zones !== undefined && climate_zones !== 'LOADING') &&
+    climate_zones !== undefined &&
+    climate_zones !== "LOADING" &&
     data === undefined
   ) {
     setState((state) => ({
@@ -416,6 +417,7 @@ export const viz = (container, { state, setState }) => {
       team_data: data,
       state,
       setState,
+      climate_zones,
     });
 
     const scatterSvg = div
@@ -458,10 +460,10 @@ export const viz = (container, { state, setState }) => {
       climate_zones: "LOADING",
     }));
 
-    fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+    fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json")
       .then((res) => res.json())
       .then((topoJSONdata) => {
-        const map_data = topojson.feature(topoJSONdata, "states");
+        const map_data = topojson.feature(topoJSONdata, "counties");
         //console.log(map_data)
         setState((state) => ({
           ...state,
@@ -469,20 +471,16 @@ export const viz = (container, { state, setState }) => {
         }));
       });
 
-    // fetch('https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/topo.json')
-    //     .then((res) => res.json())
-    //     .then(topoJSONdata => {
-    //         const climate_zones = topojson.feature(
-    //             topoJSONdata,
-    //             "geo"
-    //         )
-    //         //console.log(map_data)
-    //         setState((state) => ({
-    //             ...state,
-    //             climate_zones
-    //         }))
-    //     })
-
+    fetch(
+      "https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/koppen_climate_data.json"
+    )
+      .then((res) => res.json())
+      .then((climate_zones) => {
+        setState((state) => ({
+          ...state,
+          climate_zones,
+        }));
+      });
     fetch(
       "https://raw.githubusercontent.com/hmkyriacou/scrape-nfl-data/main/meta-data.json"
     )

@@ -1,4 +1,4 @@
-import { geoAlbersUsa, geoPath } from "d3";
+import { geoAlbersUsa, geoPath, schemeRdBu, scaleSequential } from "d3";
 
 import tooltip from "./tooltips";
 
@@ -8,10 +8,14 @@ export const mapdestroy = (selection) => {
 
 export default function map(
   selection,
-  { data, team_data, width, height, xValue, state, setState }
+  { data, team_data, width, height, xValue, state, setState, climate_zones }
 ) {
   const projection = geoAlbersUsa().fitSize([width, height], data);
   const path = geoPath(projection);
+
+  const colorScale = scaleSequential(schemeRdBu).domain([0, 30]);
+
+  console.log(colorScale(15));
 
   selection
     .selectAll("path.country")
