@@ -76,8 +76,10 @@ export default function map(
     .attr("fill", (d) =>
       fipsToCls.get(d.id) ? colorScale(fipsToCls.get(d.id)) : "black"
     )
-    .attr("stroke", (d) => colorScale(fipsToCls.get(d.id)))
-    .attr("stroke-width", 0.5);
+    .attr("stroke", (d) =>
+      fipsToCls.get(d.id) ? colorScale(fipsToCls.get(d.id)) : "black"
+    )
+    .attr("stroke-width", 1);
 
   const imgs = selection
     .selectAll("image")
@@ -113,4 +115,54 @@ export default function map(
     xValue,
     descriptorText: "This team has a home win percentage of: ",
   });
+
+  const mapAspectRatio =
+    selection.node().getBoundingClientRect().height /
+    selection.node().getBoundingClientRect().width;
+
+  let legW = 45;
+  let legH = 230;
+
+  let legY = selection.node().getBoundingClientRect().height - legH - 2;
+
+  // Floating Legend
+  const rectleg = selection
+    .selectAll("rect.legend")
+    .data([null])
+    .join("rect")
+    .attr("class", "legend")
+    .attr("width", legW)
+    .attr("height", legH)
+    .attr("x", 2)
+    .attr("y", legY)
+    .attr("fill", "white")
+    .attr("stroke", "black")
+    .attr("stroke-width", 2)
+    .style("opacity", 0.8);
+
+  rectleg.call(tooltip, {
+    descriptorText: "Koppen Climate Color Codes",
+  });
+
+  selection
+    .selectAll("rect.colorPatch")
+    .data(climate_zone_list)
+    .join("rect")
+    .attr("class", "colorPatch")
+    .attr("x", 5)
+    .attr("y", (d, i) => legY + 5 + 11 * i)
+    .attr("width", 10)
+    .attr("height", 10)
+    .attr("fill", (d) => colorScale(d));
+
+  selection
+    .selectAll("text.leg")
+    .data(climate_zone_list)
+    .join("text")
+    .attr("class", "leg")
+    .text((d) => d)
+    .attr("x", 20)
+    .attr("y", (d, i) => legY + 14 + 11 * i)
+    .attr("stroke", "black")
+    .attr("font-size", 10);
 }

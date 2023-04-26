@@ -34,7 +34,7 @@ export default function tooltip(
 
   function mouseover(e, d) {
     Tooltip.style("opacity", 1);
-    ttext.text(descriptorText + xValue(d).toFixed(2));
+    ttext.text(descriptorText + (xValue ? xValue(d).toFixed(2) : ""));
     trect.attr("width", ttext.node().getBBox().width + 10);
     if (eventListeners && eventListeners.mouseover) {
       eventListeners.mouseover(e, d);
