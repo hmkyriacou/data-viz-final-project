@@ -15,6 +15,9 @@ Also, this earlier prototype shows only four teams win percentage but using a pi
 
 [![image](https://user-images.githubusercontent.com/30053669/220141812-1b78aa11-bfa2-4a71-8de4-7266d3b5cb75.png)](https://vizhub.com/hmkyriacou/3a6357c278ee48e7927a2e32c2d3f356)
 
+My next iteration allowed for switching between Viz types and different homefield win percentage calculations. This helped me decide on the final direction I would take with the vizualization.
+
+[![datavizprojectiter](https://user-images.githubusercontent.com/30053669/234987205-0bff03ac-bf26-4b5e-9dcf-6ac8a65baf8c.PNG)](https://vizhub.com/hmkyriacou/33c18e5e682a454f89aef69567660ee5)
 
 ## Questions & Tasks
 
@@ -38,6 +41,7 @@ After doing the scatter plot assignment though, I think having a scatter plot in
 * I have been unable to find really good weather data. So far, I have only been able to piece the average temperature from several different sources and I haven't found average percipation by city yet either.
 
 ## Link to running site
+
 http://nfl-homefield-advtg-viz.s3-website.us-east-2.amazonaws.com/
 
 ## Milestones
